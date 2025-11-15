@@ -1,0 +1,9 @@
+{
+  "stage1_model_dir": "models/opus-mt-en-vi-ct2",
+  "stage1_hf_name": "Helsinki-NLP/opus-mt-en-vi",
+  "ollama_model": "llama3.2:3b",
+  "ollama_host": "http://localhost:11434",
+  "temperature": 0.2,
+  "beam_size": 2,
+  "timeout": 600
+}
