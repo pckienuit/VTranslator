@@ -1,10 +1,8 @@
 {
-  "stage1_model_dir": "models/m2m100-418m-ct2",
-  "stage1_hf_name": "facebook/m2m100_418M",
-  "ollama_model": "gemma3:4b",
+  "ollama_model": "gemma3:12b",
   "ollama_host": "http://localhost:11434",
   "temperature": 0.2,
-  "beam_size": 2,
-  "timeout": 600,
-  "use_ollama_only": false
+  "max_tokens": 2048,
+  "max_chunk_chars": 1200,
+  "timeout": 600
 }

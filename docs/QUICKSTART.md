@@ -1,6 +1,6 @@
-# 🚀 Quick Start - Bắt đầu trong 3 bước
+# 🚀 Quick Start - Gemma 3 12B
 
-Hướng dẫn siêu nhanh để chạy pipeline dịch thuật lai với Ollama.
+Hướng dẫn siêu nhanh để chạy pipeline dịch thuật Gemma-only với Ollama.
 
 ---
 
@@ -14,9 +14,9 @@ scripts\setup_ollama.bat
 
 Script này sẽ tự động:
 - ✅ Kiểm tra Python
-- ✅ Cài đặt thư viện
-- ✅ Tải và chuyển đổi mô hình Stage 1
-- ✅ Hướng dẫn cài Ollama
+- ✅ Cài đặt thư viện (dựa trên `requirements.txt`)
+- ✅ Nhắc bạn tải Gemma 3 12B qua Ollama
+- ✅ Hiển thị lệnh khởi động ứng dụng
 
 Sau khi chạy xong, làm theo hướng dẫn hiển thị để cài Ollama.
 
@@ -27,7 +27,7 @@ Sau khi chạy xong, làm theo hướng dẫn hiển thị để cài Ollama.
 ### Bước 1: Cài đặt thư viện
 
 ```bash
-pip install ctranslate2 transformers sentencepiece gradio requests torch
+pip install -r requirements.txt
 ```
 
 ### Bước 2: Thiết lập mô hình
@@ -55,7 +55,7 @@ curl -fsSL https://ollama.ai/install.sh | sh
 ### Bước 4: Tải mô hình LLM
 
 ```bash
-ollama pull llama3.2:3b
+ollama pull gemma3:12b
 ```
 
 ---
@@ -87,9 +87,9 @@ http://localhost:7860
 ## 🎉 Xong!
 
 Giờ bạn có thể:
-- ✅ Dịch văn bản tiếng Anh sang tiếng Việt
-- ✅ Không giới hạn độ dài văn bản
-- ✅ Xem cả bản dịch thô (Stage 1) và dịch tinh chỉnh (Stage 2)
+- ✅ Dịch văn bản tiếng Anh sang tiếng Việt bằng Gemma 3 12B
+- ✅ Dịch văn bản dài, pipeline tự động chia đoạn
+- ✅ Theo dõi thời gian xử lý ngay trong UI
 
 ---
 
@@ -112,7 +112,7 @@ ollama serve
 ### Lỗi: "Model not found"
 
 ```bash
-ollama pull llama3.2:3b
+ollama pull gemma3:12b
 ```
 
 ### Lỗi khác

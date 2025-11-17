@@ -92,205 +92,106 @@ VTranslator/
 
 **Tham số quan trọng:**
 - `ollama_model`: Tên mô hình LLM (xem `ollama list`)
-- `temperature`: Độ sáng tạo (0.1-0.3 cho dịch thuật)
-- `timeout`: Thời gian chờ tối đa (giây)
+# 📊 PROJECT SUMMARY
+
+## 🎯 Mục tiêu
+Cung cấp trình dịch Anh → Việt chất lượng cao dựa trên **một giai đoạn duy nhất** của mô hình `gemma3:12b` chạy qua Ollama. Pipeline tập trung vào sự đơn giản: chỉ cần cài Ollama, kéo model, cấu hình thông số, rồi chạy UI Gradio.
 
 ---
 
-## ⚙️ Quy trình Dịch thuật
-
-### Pipeline Workflow
-
+## 🏗️ Kiến trúc hiện tại
 ```
-English Input
-     ↓
-[Tokenization] (sentencepiece)
-     ↓
-[Stage 1: CTranslate2 NMT]
-     ↓
-Vietnamese Draft (thô)
-     ↓
-[Stage 2: Ollama LLM]
-     ↓
-Vietnamese Refined (tinh chỉnh)
+Văn bản nguồn + bối cảnh
+        ↓
+[GemmaTranslationPipeline]
+        ↓
+Kết quả dịch đã tinh chỉnh
 ```
-
-### Stage 2 Prompt Engineering
-
-**System Message:**
-```
-You are a translation refinement assistant. Your task is to improve Vietnamese translations.
-```
-
-**User Prompt:**
-```
-Improve this Vietnamese translation:
-{translation}
-
-Output only the improved Vietnamese text, nothing else.
-```
-
-**Stop Tokens:** `["\n\n", "English:", "Current", "Improved"]`
+- Không còn Stage 1 NMT; Gemma đảm nhiệm cả dịch thô lẫn tinh chỉnh.
+- Pipeline chia văn bản thành từng chunk, thêm prompt hướng dẫn giữ nguyên thuật ngữ, rồi ghép kết quả cuối.
+- UI (`src/app/web_ui.py`) giao tiếp với pipeline thông qua API cục bộ.
 
 ---
 
-## 📊 Hiệu năng
-
-### Tốc độ (Stage 1 - CTranslate2)
-
-| Metric | Giá trị |
-|--------|---------|
-| Inference Speed | ~9x faster than PyTorch |
-| VRAM Usage | ~813MB (INT8 quantization) |
-| Model Size | ~300MB (on disk) |
-
-### Chất lượng (Stage 2 - Ollama)
-
-| Metric | Mô tả |
-|--------|-------|
-| Fluency | Cải thiện tính tự nhiên của câu |
-| Consistency | Giữ nguyên ý nghĩa gốc |
-| Naturalness | Tiếng Việt tự nhiên hơn, ít máy móc |
+## 📁 Cấu trúc chính
+```
+VTranslator/
+├── run_app.py                    # Entry point Gradio
+├── src/
+│   ├── app/web_ui.py            # Giao diện web
+│   ├── pipeline/gemma_pipeline.py
+│   ├── pipeline/hybrid_pipeline.py (shim tương thích)
+│   └── config/settings.json     # Tham số Ollama + chunk
+├── scripts/
+│   ├── setup_models.py          # Kiểm tra phụ thuộc, hướng dẫn kéo model
+│   └── setup_ollama.bat         # Quy trình cài đặt trên Windows
+├── docs/                        # README, QUICKSTART, INSTALL_WINDOWS, OLLAMA_GUIDE, ...
+├── requirements.txt             # Chỉ cần gradio + requests
+└── README.md                    # Tổng quan dự án
+```
 
 ---
 
-## 🚀 Cài đặt & Sử dụng
-
-### Quick Start
-
-```bash
-# 1. Tự động (Windows)
-setup_ollama.bat
-
-# 2. Thủ công
-pip install ctranslate2 transformers sentencepiece gradio requests torch
-python setup_models.py
-ollama pull llama3.2:3b
-
-# 3. Chạy
-ollama serve
-python app_ollama.py
-```
-
-Xem **QUICKSTART.md** để biết chi tiết.
-
----
-
-## 🎛️ Tùy chỉnh
-
-### Thay đổi mô hình LLM
-
-1. Chỉnh sửa `config_ollama.json`:
-   ```json
-   "ollama_model": "llama3:8b"
-   ```
-
-2. Tải mô hình:
-   ```bash
-   ollama pull llama3:8b
-   ```
-
-3. Restart `app_ollama.py`
-
-### Điều chỉnh prompt
-
-Chỉnh sửa `pipeline_ollama.py`:
-
-```python
-def _refine_stage2(self, translation: str) -> str:
-    system = "Your custom system message"
-    user = f"Your custom user prompt with {translation}"
-    # ...
-```
-
-### Không giới hạn độ dài
-
-Pipeline **KHÔNG có giới hạn** về độ dài văn bản:
-- ✅ `app_ollama.py`: Không có check độ dài
-- ✅ `pipeline_ollama.py`: `num_predict` tự động từ 512-4096 tokens
-- ✅ `timeout`: 180s (có thể tăng lên)
-
----
-
-## 🆚 So sánh Phiên bản
-
-| Feature | llama-cpp-python | Ollama |
-|---------|------------------|--------|
-| **Windows Install** | ❌ Cần Build Tools | ✅ Chỉ cần .exe |
-| **Model Management** | 🔧 Thủ công (GGUF) | ✅ CLI (pull/rm) |
-| **API** | ⚙️ Python binding | ✅ HTTP REST |
-| **Performance** | ⚡ Fast | ⚡ Equivalent |
-| **Ease of Use** | 🔴 Advanced users | 🟢 Beginner friendly |
-| **Recommendation** | Linux/Mac experts | **Everyone** |
-
----
-
-## 🐛 Troubleshooting
-
-### Lỗi: "Could not connect to Ollama"
-
-```bash
-ollama serve
-```
-
-### Lỗi: "Model not found"
-
-```bash
-ollama list
-ollama pull llama3.2:3b
-```
-
-### Lỗi: "Timeout"
-
-Tăng `timeout` trong `config_ollama.json`:
+## ⚙️ Cấu hình
+`src/config/settings.json` điều khiển toàn bộ hành vi:
 ```json
-"timeout": 300
+{
+  "ollama_model": "gemma3:12b",
+  "ollama_host": "http://localhost:11434",
+  "temperature": 0.15,
+  "max_tokens": 2048,
+  "max_chunk_chars": 2100,
+  "timeout": 120.0
+}
 ```
-
-Xem **OLLAMA_GUIDE.md** để biết thêm.
-
----
-
-## 📚 Dependencies
-
-### Python Packages
-
-```
-ctranslate2>=3.24.0
-transformers>=4.36.0
-sentencepiece>=0.1.99
-torch>=2.1.0
-gradio>=4.0.0
-requests>=2.31.0
-```
-
-### External Tools
-
-- **Ollama**: https://ollama.ai/download
-- **Python**: 3.8+ (khuyến nghị 3.10+)
+- `max_chunk_chars`: giới hạn số ký tự một đoạn gửi lên Ollama; tự động ghép lại.
+- `max_tokens`: số token trả về tối đa mỗi lần gọi.
+- `timeout`: thời gian chờ API.
 
 ---
 
-## 📖 Tài liệu
+## 🧠 Prompt Engineering
+System prompt nhắc Gemma đóng vai dịch giả kỹ thuật, giữ định dạng, không bỏ nội dung. User prompt bao gồm:
+1. Ngữ cảnh/bối cảnh dịch
+2. Văn bản gốc tiếng Anh
+3. Hướng dẫn yêu cầu đầu ra tiếng Việt rõ ràng
 
-- **QUICKSTART.md** - Bắt đầu nhanh trong 3 bước
-- **OLLAMA_GUIDE.md** - Hướng dẫn chi tiết về Ollama
-- **README.md** - Tổng quan và giới thiệu
-- **LICENSE** - MIT License
-
----
-
-## 🎯 Kết luận
-
-Dự án VTranslator cung cấp:
-- ✅ **Pipeline dịch thuật lai** hiệu quả (Translate-and-Refine)
-- ✅ **Không giới hạn độ dài** văn bản đầu vào
-- ✅ **Dễ cài đặt** trên Windows với Ollama
-- ✅ **Linh hoạt** trong việc chọn mô hình LLM
-- ✅ **Hiệu năng cao** với CTranslate2 và Ollama
-
-**Phiên bản Ollama** là lựa chọn khuyến nghị cho mọi người dùng, đặc biệt trên Windows.
+Pipeline tự động loại bỏ nhãn “Vietnamese Translation:” nếu model trả về.
 
 ---
 
-**🚀 Bắt đầu ngay: `setup_ollama.bat`**
+## 🚀 Quy trình sử dụng
+1. Cài Ollama (xem `docs/INSTALL_WINDOWS.md` hoặc `docs/OLLAMA_GUIDE.md`).
+2. Chạy `ollama pull gemma3:12b`.
+3. Tạo môi trường Python và `pip install -r requirements.txt`.
+4. Chạy `python run_app.py`.
+5. Mở URL Gradio, nhập văn bản + bối cảnh, nhấn "Translate".
+
+---
+
+## 📈 Hiệu năng & Giới hạn
+- Chất lượng dịch phụ thuộc vào Gemma; tốc độ ~5-10s cho đoạn 400 từ (tùy phần cứng).
+- Không giới hạn độ dài văn bản; pipeline sẽ tự chia nhỏ.
+- Cần RAM tối thiểu 8GB và khoảng 15GB đĩa trống cho model.
+
+---
+
+## 🔧 Tùy chỉnh
+- Muốn dùng model khác: sửa `ollama_model` và kéo model tương ứng.
+- Muốn thay prompt: chỉnh `GemmaTranslationPipeline._build_prompt`.
+- Muốn đổi UI: cập nhật `src/app/web_ui.py` (Gradio components).
+
+---
+
+## 📚 Tài liệu liên quan
+- `README.md` – Tổng quan và hướng dẫn chung
+- `docs/QUICKSTART.md` – 3 bước chạy nhanh
+- `docs/INSTALL_WINDOWS.md` – Hướng dẫn đầy đủ cho Windows
+- `docs/OLLAMA_GUIDE.md` – Chi tiết thiết lập Ollama
+- `docs/MODELS.md` – Thông tin model Gemma đang dùng
+
+---
+
+## ✅ Kết luận
+Phiên bản hiện tại nhấn mạnh sự đơn giản: một mô hình duy nhất, cấu hình nhẹ, dễ vận hành. Chỉ cần Ollama + Gemma 3 12B là có thể dịch chất lượng cao mà không phải quản lý nhiều pipeline phức tạp.
+Chỉnh sửa `pipeline_ollama.py`:
