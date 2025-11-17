@@ -73,7 +73,11 @@ def translate_interface(input_text: str):
             "⏱️ Thời gian xử lý:\n"
             f"  • Giai đoạn 1 (Dịch thô): {time_s1:.3f}s\n"
             f"  • Giai đoạn 2 (Tinh chỉnh qua Ollama): {time_s2:.3f}s\n"
-            f"  • Tổng cộng: {time_s1 + time_s2:.3f}s"
+            f"  • Tổng cộng: {time_s1 + time_s2:.3f}s\n\n"
+            f"📊 Độ dài:\n"
+            f"  • Input: {len(input_text)} ký tự\n"
+            f"  • Dịch thô: {len(raw)} ký tự\n"
+            f"  • Tinh chỉnh: {len(refined)} ký tự"
         )
 
         return raw, refined, time_info, ""
@@ -165,16 +169,20 @@ def create_app() -> gr.Blocks:
             with gr.Column(scale=1):
                 output_raw = gr.Textbox(
                     label="🔄 Bản dịch thô (Giai đoạn 1)",
-                    lines=5,
+                    lines=15,
+                    max_lines=30,
                     interactive=False,
                     elem_id="output_raw",
+                    show_copy_button=True,
                 )
 
                 output_refined = gr.Textbox(
                     label="✨ Bản dịch đã tinh chỉnh (Giai đoạn 2 - Ollama)",
-                    lines=5,
+                    lines=15,
+                    max_lines=30,
                     interactive=False,
                     elem_id="output_refined",
+                    show_copy_button=True,
                 )
 
                 time_info = gr.Textbox(

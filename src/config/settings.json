@@ -1,9 +1,10 @@
 {
-  "stage1_model_dir": "models/opus-mt-en-vi-ct2",
-  "stage1_hf_name": "Helsinki-NLP/opus-mt-en-vi",
-  "ollama_model": "llama3.2:3b",
+  "stage1_model_dir": "models/m2m100-418m-ct2",
+  "stage1_hf_name": "facebook/m2m100_418M",
+  "ollama_model": "gemma3:4b",
   "ollama_host": "http://localhost:11434",
   "temperature": 0.2,
   "beam_size": 2,
-  "timeout": 600
+  "timeout": 600,
+  "use_ollama_only": false
 }
